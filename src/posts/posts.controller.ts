@@ -1,5 +1,9 @@
 import { 
-  Controller, Get, Param
+  Controller, Get, Param, NotFoundException,
+  Post,
+  Body,
+  Put,
+  Delete
 } from '@nestjs/common';
 import { PostsService } from './posts.service';
 
@@ -60,10 +64,75 @@ export class PostsController {
   // 2) GET /posts/:id
   @Get(':id')
   getPost(@Param('id') id: string) {
-    return posts.find(post => post.id === Number(id));
+    const post = posts.find(post => post.id === Number(id));
+    if (!post) {
+      throw new NotFoundException(`Post with id ${id} not found`);
+    }
+    return post;
   }
 
   // 3) POST /posts
+  @Post()
+  postPost(
+    @Body('author') author: string,
+    @Body('title') title: string,
+    @Body('content') content: string,
+  ) {
+      const post = {
+        id: posts[posts.length - 1].id + 1,
+        author,
+        title,
+        content,
+        likeCount: 0,
+        commentCount: 0,
+      }
+
+      posts = [
+        ...posts,
+       post,
+      ];
+
+      return post;
+  }
+
   // 4) PUT /posts/:id
+  @Put(':id')
+  putPost(
+    @Param('id') id: string,
+    @Body('author') author?: string,
+    @Body('title') title?: string,
+    @Body('content') content?: string,
+  ) {
+    const post = posts.find(post => post.id === Number(id));
+    if (!post) {
+      throw new NotFoundException(`Post with id ${id} not found`);
+    }
+
+    if (author) {
+      post.author = author;
+    }
+    if (title) {
+      post.title = title;
+    }
+    if (content) {
+      post.content = content;
+    }
+
+    // +id : string -> number
+    posts = posts.map(prevPost => prevPost.id === +id ? post : prevPost);
+
+    return post;
+  }
+
   // 5) DELETE /posts/:id
+  @Delete(':id')
+  deletePost(@Param('id') id: string) {
+    const post = posts.find(post => post.id === Number(id));
+    if (!post) {
+      throw new NotFoundException(`Post with id ${id} not found`);
+    }
+    
+    posts = posts.filter(post => post.id !== +id);
+    return id;
+  }
 }
