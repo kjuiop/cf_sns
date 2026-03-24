@@ -4,7 +4,8 @@ import {
   Body,
   Put,
   Delete,
-  ParseIntPipe
+  ParseIntPipe,
+  DefaultValuePipe
 } from '@nestjs/common';
 import { PostsService } from './posts.service';
 
