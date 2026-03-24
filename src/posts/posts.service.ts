@@ -56,7 +56,6 @@ export class PostsService {
         // 2) save -> 객체를 저장한다.
 
         const post = this.postRepository.create({
-            author,
             title,
             content,
             likeCount: 0,
@@ -83,9 +82,6 @@ export class PostsService {
             throw new NotFoundException(`Post with id ${id} not found`);
         }
 
-        if (author) {
-            post.author = author;
-        }
         if (title) {
             post.title = title;
         }
