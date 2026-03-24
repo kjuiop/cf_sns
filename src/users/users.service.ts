@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UsersModel } from './entities/users.entity';
 import { Repository } from 'typeorm';
@@ -10,14 +10,35 @@ export class UsersService {
         private readonly usersRepository: Repository<UsersModel>,
     ) {}
 
-    async createUser(nickname: string, email: string, password: string) {
-        const user = this.usersRepository.create({
-            nickname,
-            email,
-            password,
+    async createUser(user: Pick<UsersModel, 'email' | 'nickname' | 'password'>) {
+
+        const nicknameExists = await this.usersRepository.exist({
+            where: {
+                nickname: user.nickname,
+            }
+        })
+
+        if (nicknameExists) {
+            throw new BadRequestException('이미 존재하는 nickname 입니다.');
+        }
+
+        const emailExists = await this.usersRepository.exist({
+            where: {
+                email: user.email,
+            }
         });
 
-        const newUser = await this.usersRepository.save(user);
+        if (emailExists) {
+            throw new BadRequestException('이미 존재하는 email 입니다.');
+        }
+
+        const userObj = this.usersRepository.create({
+            email: user.email,
+            nickname: user.nickname,
+            password: user.password,
+        });
+
+        const newUser = await this.usersRepository.save(userObj);
         return newUser;
     }
 
