@@ -35,6 +35,9 @@ export class PostsService {
         return await this.postRepository.find({
             order: {
                 id: 'DESC',
+            },
+            relations: {
+                author: true,
             }
         });
     }
@@ -43,6 +46,9 @@ export class PostsService {
         const post = await this.postRepository.findOne({
             where: {
                 id,
+            },
+            relations: {
+                author: true,
             }
         });
         if (!post) {
@@ -51,11 +57,14 @@ export class PostsService {
         return post;
     }
 
-    async createPost(author: string, title: string, content: string) {
+    async createPost(authorId: number, title: string, content: string) {
         // 1) create -> 저장할 객체를 생성한다.
         // 2) save -> 객체를 저장한다.
 
         const post = this.postRepository.create({
+            author: {
+                id: authorId,
+            },
             title,
             content,
             likeCount: 0,
@@ -66,7 +75,7 @@ export class PostsService {
         return newPost;
     }
 
-    async updatePost(id: number, author?: string, title?: string, content?: string) {
+    async updatePost(id: number, title?: string, content?: string) {
         
         // save 의 기능
         // 1) 만약에 데이터가 존재하지 않는다면 (id 기준으로) 새로 생성한다.
