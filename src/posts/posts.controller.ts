@@ -7,12 +7,15 @@ import {
   ParseIntPipe,
   DefaultValuePipe,
   UseGuards,
-  Request
+  Request,
+  Patch
 } from '@nestjs/common';
 import { PostsService } from './posts.service';
 import { AccessTokenGuard } from 'src/auth/guard/bearer-token.guard';
 import { User } from 'src/users/decorator/user.decorator';
 import { UsersModel } from 'src/users/entities/users.entity';
+import { CreatePostDto } from './dto/create-post.dto';
+import { UpdatePostDto } from './dto/update-post.dto';
 
 
 @Controller('posts')
@@ -36,22 +39,20 @@ export class PostsController {
   @UseGuards(AccessTokenGuard)
   postPost(
     @User('id') userId: number,
-    @Body('title') title: string,
-    @Body('content') content: string,
+    @Body() req: CreatePostDto,
   ) {
-    return this.postsService.createPost(userId, title, content);
+    return this.postsService.createPost(userId, req);
   }
 
-  // 4) PUT /posts/:id
-  @Put(':id')
+  // 4) PATCH /posts/:id
+  @Patch(':id')
   @UseGuards(AccessTokenGuard)
-  putPost(
-    @User() user: UsersModel,
+  patchPost(
+    @User('id') userId: number,
     @Param('id', ParseIntPipe) id: number,
-    @Body('title') title?: string,
-    @Body('content') content?: string,
+    @Body() req: UpdatePostDto,
   ) {
-    return this.postsService.updatePost(id, title, content);
+    return this.postsService.updatePost(userId, id, req);
   }
 
   // 5) DELETE /posts/:id
