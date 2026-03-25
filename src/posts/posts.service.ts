@@ -48,6 +48,35 @@ export class PostsService {
 
     // 1) 오름차순으로 정렬하는 페이지네이션만 구현
     async paginatePosts(dto: PaginatePostDto) {
+        if (dto.page) {
+            return this.pagePaginatePosts(dto);
+        } else {
+            return this.cursorPaginatePosts(dto);
+        }
+    }
+
+    async pagePaginatePosts(dto: PaginatePostDto) {
+        /**
+         * data: Data[],
+         * total: number,
+         * 
+         */
+
+        const [posts, total] = await this.postRepository.findAndCount({
+            skip: dto.take * ((dto.page ?? 1) - 1),
+            take: dto.take,
+            order: {
+                createdAt: dto.order__createdAt,
+            }
+        })
+
+        return {
+            data: posts,
+            total,
+        }
+    }
+
+    async cursorPaginatePosts(dto: PaginatePostDto) {
         const where : FindOptionsWhere<PostsModel> = {};
 
         if (dto.where__id_less_than) {
