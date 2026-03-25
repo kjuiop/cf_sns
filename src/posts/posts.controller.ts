@@ -8,7 +8,8 @@ import {
   DefaultValuePipe,
   UseGuards,
   Request,
-  Patch
+  Patch,
+  Query
 } from '@nestjs/common';
 import { PostsService } from './posts.service';
 import { AccessTokenGuard } from 'src/auth/guard/bearer-token.guard';
@@ -16,6 +17,7 @@ import { User } from 'src/users/decorator/user.decorator';
 import { UsersModel } from 'src/users/entities/users.entity';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
+import { PaginatePostDto } from './dto/paginate-post.dto';
 
 
 @Controller('posts')
@@ -24,8 +26,10 @@ export class PostsController {
 
   // 1) GET /posts
   @Get()
-  getPosts() {
-    return this.postsService.getAllPosts();
+  getPosts(
+    @Query() query: PaginatePostDto,
+  ) {
+    return this.postsService.paginatePosts(query);
   }
 
   // 2) GET /posts/:id
@@ -63,5 +67,11 @@ export class PostsController {
     @Param('id', ParseIntPipe) id: number
   ) {
     return this.postsService.deletePost(id);
+  }
+
+  @Post('random')
+  @UseGuards(AccessTokenGuard)
+  postPostsRandom(@User('id') userId: number) {
+    return this.postsService.generatePosts(userId);
   }
 }
