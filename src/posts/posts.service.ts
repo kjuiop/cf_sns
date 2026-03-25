@@ -3,11 +3,12 @@ import {
 } from '@nestjs/common';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { MoreThan, Repository } from 'typeorm';
+import { FindOptionsWhere, LessThan, MoreThan, Repository } from 'typeorm';
 import { PostsModel } from './entities/posts.entity';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
 import { PaginatePostDto } from './dto/paginate-post.dto';
+import { HOST, PROTOCOL } from 'src/common/const/env.const';
 
 /**
  * author: string;
@@ -47,15 +48,55 @@ export class PostsService {
 
     // 1) 오름차순으로 정렬하는 페이지네이션만 구현
     async paginatePosts(dto: PaginatePostDto) {
+        const where : FindOptionsWhere<PostsModel> = {};
+
+        if (dto.where__id_less_than) {
+            where.id = LessThan(dto.where__id_less_than);
+        } else if (dto.where__id_more_than) {
+            where.id = MoreThan(dto.where__id_more_than);
+        }
+
         const posts = await this.postRepository.find({
-            where: {
-                id: MoreThan(dto.where__id_more_than ?? 0),
-            },
+            where,
+
             order: {
                 createdAt: dto.order__createdAt,
             },
             take: dto.take,
         });
+
+        // 해당되는 포스트가 0개 이상이면
+        // 마지막 포스트를 가져오고
+        // 아니면 null 을 반환한다.
+        const lastItem = posts.length > 0 && posts.length === dto.take ? posts[posts.length - 1] : null;
+
+        const nextUrl = lastItem && new URL(`${PROTOCOL}://${HOST}/posts`);
+        if (nextUrl) {
+            /**
+             * dto의 키값들을 루핑하면서
+             * 키값에 해당되는 밸류가 존재하면
+             * param 에 그대로 붙여넣는다.
+             * 
+             * 단, where__id_more_than 값만 lastItem의 마지막 값으로 넣어준다.
+             */
+            for (const key of Object.keys(dto)) {
+                if (dto[key]) {
+                    if (key !== 'where__id_more_than' && key !== 'where__id_less_than') {
+                        // url 에 쿼리파라미터 추가할 때에는 무조건 toString() 메서드를 이용해서 문자열로 변환해주는 것을 권장한다.
+                        nextUrl.searchParams.append(key, dto[key].toString());
+                    }
+                }
+            }
+
+            let key: string;
+            if (dto.order__createdAt === 'ASC') {
+                key = 'where__id_more_than';
+            } else {
+                key = 'where__id_less_than';
+            }
+
+            nextUrl.searchParams.append(key, lastItem.id.toString());
+        }
 
         /**
          * Response
@@ -69,6 +110,11 @@ export class PostsService {
          */
         return {
             data: posts,
+            cursor: {
+                after: lastItem?.id ?? null,
+            },
+            count: posts.length,
+            next: nextUrl?.toString() ?? null,
         }
     }
 
