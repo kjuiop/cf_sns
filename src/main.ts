@@ -14,6 +14,10 @@ async function bootstrap() {
       // @Type(()  => Number) 처럼 명시적으로 변환하는 것을 허용한다.
       enableImplicitConversion: true,
     },
+    // dto 클래스에 정의되어 있지 않은 프로퍼티가 들어오면 skip 처리한다.
+    whitelist: true,
+    // dto 클래스에 정의되어 있지 않은 프로퍼티가 들어오면 예외를 발생시킨다.
+    forbidNonWhitelisted: true,
   }));
   await app.listen(process.env.PORT ?? 3000);
 }

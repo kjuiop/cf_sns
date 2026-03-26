@@ -9,6 +9,7 @@ import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
 import { PaginatePostDto } from './dto/paginate-post.dto';
 import { HOST, PROTOCOL } from 'src/common/const/env.const';
+import { CommonService } from 'src/common/common.service';
 
 /**
  * author: string;
@@ -31,7 +32,8 @@ export interface PostModel {
 export class PostsService {
     constructor(
         @InjectRepository(PostsModel)
-        private readonly postRepository: Repository<PostsModel>
+        private readonly postRepository: Repository<PostsModel>,
+        private readonly commonService: CommonService,
     ) {
     }
 
@@ -48,11 +50,19 @@ export class PostsService {
 
     // 1) 오름차순으로 정렬하는 페이지네이션만 구현
     async paginatePosts(dto: PaginatePostDto) {
-        if (dto.page) {
-            return this.pagePaginatePosts(dto);
-        } else {
-            return this.cursorPaginatePosts(dto);
-        }
+        return this.commonService.paginate(
+            dto,
+            this.postRepository,
+            {
+                relations: ['author'],
+            },
+            'posts',
+        );
+        // if (dto.page) {
+        //     return this.pagePaginatePosts(dto);
+        // } else {
+        //     return this.cursorPaginatePosts(dto);
+        // }
     }
 
     async pagePaginatePosts(dto: PaginatePostDto) {
@@ -79,10 +89,10 @@ export class PostsService {
     async cursorPaginatePosts(dto: PaginatePostDto) {
         const where : FindOptionsWhere<PostsModel> = {};
 
-        if (dto.where__id_less_than) {
-            where.id = LessThan(dto.where__id_less_than);
-        } else if (dto.where__id_more_than) {
-            where.id = MoreThan(dto.where__id_more_than);
+        if (dto.where__id__less_than) {
+            where.id = LessThan(dto.where__id__less_than);
+        } else if (dto.where__id__more_than) {
+            where.id = MoreThan(dto.where__id__more_than);
         }
 
         const posts = await this.postRepository.find({

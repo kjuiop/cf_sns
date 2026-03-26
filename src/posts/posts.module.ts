@@ -5,6 +5,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { PostsModel } from './entities/posts.entity';
 import { AuthModule } from 'src/auth/auth.module';
 import { UsersModule } from 'src/users/users.module';
+import { CommonModule } from 'src/common/common.module';
 
 // 모듈에는 클래스를 넣는다. (인스턴스가 아닌), 인스턴스는 DI 시점에 IoC 컨테이너가 생성한다.
 @Module({
@@ -16,6 +17,7 @@ import { UsersModule } from 'src/users/users.module';
     ]),
     AuthModule,
     UsersModule,
+    CommonModule,
   ],
   controllers: [PostsController],
   providers: [PostsService],
